@@ -1,33 +1,28 @@
 {
-  "name": "supabase-auth-backend",
+  "name": "backend-api",
   "version": "1.0.0",
-  "description": "Backend authentication with Supabase PostgreSQL",
+  "description": "Node.js backend with PostgreSQL",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test-db.js"
   },
-  "keywords": [
-    "nodejs",
-    "express",
-    "supabase",
-    "authentication",
-    "postgresql"
-  ],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
     "pg": "^8.11.3",
-    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=14.0.0"
-  }
+    "node": ">=18.0.0"
+  },
+  "keywords": ["nodejs", "express", "postgresql", "api"],
+  "author": "Mohammed Faaz",
+  "license": "MIT"
 }
