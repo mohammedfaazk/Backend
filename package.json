@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "node test-db.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -22,6 +23,6 @@
     "node": ">=18.0.0"
   },
   "keywords": ["nodejs", "express", "postgresql", "api"],
-  "author": "Your Name",
+  "author": "Mohammed Faaz",
   "license": "MIT"
 }
