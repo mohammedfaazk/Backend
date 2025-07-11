@@ -1,10 +1,11 @@
 {
-  "name": "node-postgres-api",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "API with PostgreSQL on Render",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "build": "npm install && npm prune --production",
     "dev": "nodemon index.js"
   },
   "dependencies": {
@@ -18,6 +19,7 @@
     "morgan": "1.10.0"
   },
   "engines": {
-    "node": "18.20.2"
+    "node": "18.20.2",
+    "npm": "9.8.1"
   }
 }
