@@ -1,22 +1,34 @@
+console.log('Debug module path:', require.resolve('debug')); // Debugging line
+
 require('dotenv').config();
 const express = require('express');
+const debug = require('debug')('server');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Simple test route
+// Basic middleware
+app.use(express.json());
+
+// Test route
 app.get('/', (req, res) => {
-  res.send('API is working!');
+  debug('Received request for /');
+  res.json({ 
+    status: 'running',
+    message: 'API is working!',
+    debug: typeof debug
+  });
 });
 
-// Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
   res.json({ 
-    status: 'OK',
-    timestamp: new Date().toISOString()
+    status: 'healthy',
+    timestamp: new Date().toISOString() 
   });
 });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  debug(`Server started on port ${port}`);
 });
