@@ -21,21 +21,12 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 
-// JWT Authentication Middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+// Debug Root Route
+app.get('/', (req, res) => {
+  res.send('✅ Backend is live and running!');
+});
 
-  if (!token) return res.status(401).json({ error: 'Access token required' });
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
-    req.user = user;
-    next();
-  });
-};
-
-// Health Check Endpoint
+// Health Check
 app.get('/health', async (req, res) => {
   const dbStatus = await testConnection();
   res.json({
@@ -45,83 +36,85 @@ app.get('/health', async (req, res) => {
   });
 });
 
-// Signup Endpoint
+// JWT Auth Middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access token required' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
+    req.user = user;
+    next();
+  });
+};
+
+// Signup Route
 app.post('/api/auth/signup', async (req, res) => {
   const { name, email, password } = req.body;
-
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
   try {
-    // Check if user exists
-    const userExists = await safeQuery('SELECT id FROM users WHERE email = $1', [email]);
-    if (userExists.success && userExists.data.rows.length > 0) {
+    const existingUser = await safeQuery('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingUser.success && existingUser.data.rows.length > 0) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const newUser = await safeQuery(
+    const result = await safeQuery(
       'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, created_at',
       [name, email, hashedPassword]
     );
 
-    if (!newUser.success) {
-      return res.status(500).json({ error: 'Failed to create user' });
+    if (!result.success) {
+      return res.status(500).json({ error: 'User creation failed' });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
-      { id: newUser.data.rows[0].id, email: newUser.data.rows[0].email },
+      { id: result.data.rows[0].id, email: result.data.rows[0].email },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'Signup successful',
       data: {
-        user: newUser.data.rows[0],
+        user: result.data.rows[0],
         token,
       },
     });
-  } catch (error) {
-    console.error('Signup error:', error);
+  } catch (err) {
+    console.error('Signup error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Login Endpoint
+// Login Route
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
   try {
-    // Find user
-    const userResult = await safeQuery(
+    const result = await safeQuery(
       'SELECT id, name, email, password_hash FROM users WHERE email = $1',
       [email]
     );
 
-    if (!userResult.success || userResult.data.rows.length === 0) {
+    if (!result.success || result.data.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const user = userResult.data.rows[0];
-
-    // Check password
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) {
+    const user = result.data.rows[0];
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    if (!isValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
@@ -136,22 +129,22 @@ app.post('/api/auth/login', async (req, res) => {
         token,
       },
     });
-  } catch (error) {
-    console.error('Login error:', error);
+  } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Protected Route (Example)
+// Protected Route
 app.get('/api/users', authenticateToken, async (req, res) => {
   try {
-    const users = await safeQuery('SELECT id, name, email, created_at FROM users');
-    if (!users.success) {
+    const result = await safeQuery('SELECT id, name, email, created_at FROM users');
+    if (!result.success) {
       return res.status(500).json({ error: 'Failed to fetch users' });
     }
-    res.json({ success: true, data: users.data.rows });
-  } catch (error) {
-    console.error('Users fetch error:', error);
+    res.json({ success: true, data: result.data.rows });
+  } catch (err) {
+    console.error('Users fetch error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -161,15 +154,15 @@ const startServer = async () => {
   try {
     const dbConnected = await testConnection();
     if (!dbConnected) {
-      console.error('❌ Database connection failed!');
+      console.error('❌ DB connection failed. Exiting...');
       process.exit(1);
     }
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
-  } catch (error) {
-    console.error('Failed to start server:', error);
+  } catch (err) {
+    console.error('Startup error:', err);
     process.exit(1);
   }
 };
