@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Stable Node.js API for Render",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node index.js",
     "build": "rm -rf node_modules && npm install --production --no-audit",
