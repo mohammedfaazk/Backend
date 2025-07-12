@@ -4,7 +4,7 @@
   "description": "Stable Node.js API for Render",
   "main": "server.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server.js",
     "build": "rm -rf node_modules && npm install --production --no-audit",
     "dev": "nodemon index.js"
   },
