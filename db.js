@@ -7,10 +7,7 @@ const dbConfig = {
   database: process.env.PGDATABASE || 'auth_demo',
   password: process.env.PGPASSWORD || 'postgres',
   port: parseInt(process.env.PGPORT) || 5432,
-  ssl: process.env.NODE_ENV === 'production' ? { 
-    rejectUnauthorized: false,
-    require: true 
-  } : false,
+  ssl: { rejectUnauthorized: false }
 };
 
 const pool = new Pool(dbConfig);
